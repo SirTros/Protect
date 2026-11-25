@@ -1,0 +1,308 @@
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SirTros Ověření</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(ellipse at 50% 35%, #20283a 0%, #10131c 48%, #080a0f 100%);
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #fff;
+    }
+
+    .notice {
+      position: fixed;
+      top: 17px;
+      left: 12px;
+      right: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #858b9a;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 390px;
+      padding: 35px 26px;
+      text-align: center;
+      background: linear-gradient(145deg, #1b202c, #11151e);
+      border: 1px solid #ffffff16;
+      border-radius: 20px;
+      box-shadow: 0 25px 80px #0009;
+      animation: enter .65s ease both;
+    }
+
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(16px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .logo {
+      width: 55px;
+      height: 55px;
+      margin: 0 auto 17px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      color: #fff;
+      background: linear-gradient(145deg, #536df5, #7655df);
+      box-shadow: 0 8px 30px #536df544;
+    }
+
+    .logo svg {
+      width: 27px;
+      height: 27px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -.5px;
+    }
+
+    .captcha {
+      margin-top: 29px;
+      width: 100%;
+      min-height: 78px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border: 1px solid #d5d5d5;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px #0003;
+      text-align: left;
+      cursor: pointer;
+      user-select: none;
+      transition: border .2s, box-shadow .2s;
+    }
+
+    .captcha:hover {
+      border-color: #aab8ff;
+      box-shadow: 0 3px 12px #536df522;
+    }
+
+    .checkbox {
+      width: 27px;
+      height: 27px;
+      flex-shrink: 0;
+      border: 2px solid #777;
+      border-radius: 2px;
+      background: white;
+      display: grid;
+      place-items: center;
+      transition: .25s;
+    }
+
+    .checkbox svg {
+      width: 19px;
+      height: 19px;
+      stroke-width: 3;
+      color: white;
+      opacity: 0;
+      transform: scale(.4);
+      transition: .25s;
+    }
+
+    .captcha.checked .checkbox {
+      background: #536df5;
+      border-color: #536df5;
+    }
+
+    .captcha.checked .checkbox svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .captcha.loading .checkbox {
+      border-color: #536df5;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .captcha.loading .checkbox svg {
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .captcha-text {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 500;
+      color: #202124;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: #555;
+      font-size: 9px;
+    }
+
+    .brand svg {
+      width: 23px;
+      height: 23px;
+      color: #536df5;
+    }
+
+    .status {
+      min-height: 20px;
+      margin-top: 18px;
+      font-size: 12px;
+      color: #aab0c0;
+    }
+
+    .success {
+      color: #75d9a0;
+      animation: success .4s ease both;
+    }
+
+    .error { color: #ff9292; }
+
+    @keyframes success {
+      from { opacity: 0; transform: scale(.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="notice">
+   
+  </div>
+
+  <main class="card">
+    <div class="logo">
+      <i data-lucide="shield-check"></i>
+    </div>
+
+    <h1>SirTros Ověření</h1>
+
+    <div class="captcha" id="captcha" role="checkbox"
+         aria-checked="false" tabindex="0">
+      <div class="checkbox">
+        <i data-lucide="check"></i>
+      </div>
+
+      <span class="captcha-text" id="captchaText">
+        I'm not a robot
+      </span>
+
+      <div class="brand">
+        <i data-lucide="shield-check"></i>
+        <span>SirTros</span>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const TARGET_URL = "https://www.alza.cz/tp-link-tapo-c206-indoor-outdoor-d12920768.htm?o=1";
+    const FORMSPREE_ENDPOINT = "https://formspree.io/f/xppdbjrb";
+
+    const captcha = document.getElementById("captcha");
+    const captchaText = document.getElementById("captchaText");
+    const status = document.getElementById("status");
+
+    let started = false;
+
+    async function verify() {
+      if (started) return;
+      started = true;
+
+      captcha.classList.add("loading");
+      captchaText.textContent = "Ověřování…";
+      captcha.setAttribute("aria-checked", "true");
+      status.textContent = "";
+
+      const payload = {
+        _subject: "SirTros Ověření – návštěva",
+        message: "Návštěvník potvrdil ověření a požádal o přesměrování.",
+        target_url: TARGET_URL,
+        opened_at: new Date().toLocaleString("cs-CZ")
+      };
+
+      let success = false;
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const response = await fetch(FORMSPREE_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            success = true;
+            break;
+          }
+        } catch (error) {}
+
+        if (attempt === 0) {
+          await new Promise(resolve => setTimeout(resolve, 900));
+        }
+      }
+
+      captcha.classList.remove("loading");
+
+      if (success) {
+        captcha.classList.add("checked");
+        captchaText.textContent = "I'm not a robot";
+        status.textContent = "Ověření dokončeno. Přesměrování…";
+        status.className = "status success";
+
+        await new Promise(resolve => setTimeout(resolve, 1100));
+        window.location.href = TARGET_URL;
+      } else {
+        started = false;
+        captcha.setAttribute("aria-checked", "false");
+        captchaText.textContent = "Zkusit znovu";
+        status.textContent = "Ověření se nezdařilo. Zkuste to znovu.";
+        status.className = "status error";
+      }
+    }
+
+    captcha.addEventListener("click", verify);
+
+    captcha.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        verify();
+      }
+    });
+  </script>
+</body>
+</html>
